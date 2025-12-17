@@ -1,20 +1,20 @@
 import { streamText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
 
-const openai = createOpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+const anthropic = createAnthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || 'mock-key',
 });
 
 export async function POST(req: Request) {
     const { messages } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
-        return new Response("I am a mock AI. To use real AI, set OPENAI_API_KEY in .env.local", { status: 200 });
+    if (!process.env.ANTHROPIC_API_KEY) {
+        return new Response("I am a mock AI. To use real AI, set ANTHROPIC_API_KEY in .env.local", { status: 200 });
     }
 
     try {
         const result = await streamText({
-            model: openai('gpt-4'),
+            model: anthropic('claude-3-5-sonnet-20241022'),
             messages,
             system: `You are a helpful career coach assisting a user to rewrite their resume bullet points.
             The user is answering clarifying questions about missing skills.

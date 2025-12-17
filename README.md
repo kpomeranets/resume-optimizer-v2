@@ -1,8 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resume Optimizer V2
+
+AI-powered resume optimization application built with Next.js 14+ and Anthropic Claude.
+
+## Features
+
+- 📄 Upload resume (PDF, DOCX, TXT)
+- 🔍 AI-powered keyword gap analysis
+- 💬 Authenticity wizard for clarification
+- ✨ STAR-method bullet rewriting
+- 📥 Export optimized resume to DOCX
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router) with TypeScript
+- **AI**: Anthropic Claude (Claude 3.5 Sonnet)
+- **Styling**: Tailwind CSS
+- **State**: Zustand
+- **Animation**: Framer Motion
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Set Up Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+cp .env.example .env.local
+```
+
+Then add your Anthropic API key:
+
+```
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+Get your API key from [Anthropic Console](https://console.anthropic.com/)
+
+### 3. Run the Development Server
 
 ```bash
 npm run dev

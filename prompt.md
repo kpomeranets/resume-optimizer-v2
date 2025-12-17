@@ -9,7 +9,7 @@
 *   **Styling**: Tailwind CSS (for layout/responsiveness) + Custom CSS Modules (for complex glassmorphism effects) OR styled-components.
 *   **State Management**: Zustand or React Context (for complex wizard state).
 *   **Backend**: Next.js API Routes (Serverless Functions).
-*   **AI Integration**: Vercel AI SDK (streaming responses) with OpenAI (GPT-4) or Google Gemini Pro.
+*   **AI Integration**: Vercel AI SDK (streaming responses) with Anthropic Claude (Claude 3.5 Sonnet or Claude Opus 4).
 *   **File Handling**:
     *   `pdf-parse` (Server-side PDF extraction).
     *   `mammoth` (Server-side Word extraction).

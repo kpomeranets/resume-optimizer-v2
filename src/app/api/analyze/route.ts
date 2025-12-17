@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || 'mock-key',
 });
 
 // Mock response function for development without API key
@@ -18,7 +18,7 @@ const mockAnalysis = {
 export async function POST(req: Request) {
     const { resumeText, jobDescription } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
         // Return mock data if no key (safe failover for dev)
         return new Response(JSON.stringify(mockAnalysis), {
             status: 200,
@@ -27,37 +27,38 @@ export async function POST(req: Request) {
     }
 
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4',
+        const message = await anthropic.messages.create({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 2000,
             messages: [
                 {
-                    role: 'system',
-                    content: `You are an expert ATS resume analyzer. Analyze the gap between the RESUME and JOB DESCRIPTION.
-          Output JSON format:
-          {
-            "criticalMissing": ["keyword1", "keyword2"],
-            "underweighted": ["keyword3"],
-            "optimized": ["keyword4"],
-            "suggestions": {
-               "keyword1": "Clarifying question?",
-               "keyword2": "Clarifying question?"
-            }
-          }
-          - "criticalMissing": Keywords in JD >3 times, 0 in Resume.
-          - "underweighted": Keywords in JD >3 times, only 1 in Resume.
-          - "optimized": Good balance.
-          - "suggestions": For critical missing, ask a question to check if user actually has the skill.
-          `
-                },
-                {
                     role: 'user',
-                    content: `RESUME:\n${resumeText.substring(0, 3000)}\n\nJOB DESCRIPTION:\n${jobDescription.substring(0, 3000)}`
+                    content: `You are an expert ATS resume analyzer. Analyze the gap between the RESUME and JOB DESCRIPTION.
+Output JSON format ONLY (no other text):
+{
+  "criticalMissing": ["keyword1", "keyword2"],
+  "underweighted": ["keyword3"],
+  "optimized": ["keyword4"],
+  "suggestions": {
+     "keyword1": "Clarifying question?",
+     "keyword2": "Clarifying question?"
+  }
+}
+- "criticalMissing": Keywords in JD >3 times, 0 in Resume.
+- "underweighted": Keywords in JD >3 times, only 1 in Resume.
+- "optimized": Good balance.
+- "suggestions": For critical missing, ask a question to check if user actually has the skill.
+
+RESUME:
+${resumeText.substring(0, 3000)}
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 3000)}`
                 }
-            ],
-            response_format: { type: 'json_object' }
+            ]
         });
 
-        const result = completion.choices[0].message.content;
+        const result = message.content[0].type === 'text' ? message.content[0].text : '{}';
         return new Response(result, {
             status: 200,
             headers: { 'Content-Type': 'application/json' }

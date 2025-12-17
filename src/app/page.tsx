@@ -1,65 +1,154 @@
-import Image from "next/image";
+"use client";
+
+import { useAppStore } from "@/store/useAppStore";
+import { FileUpload } from "@/components/features/FileUpload";
+import { JobInput } from "@/components/features/JobInput";
+import { AnalysisDashboard } from "@/components/features/AnalysisDashboard";
+import { AuthenticityWizard } from "@/components/features/AuthenticityWizard";
+import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
+  const wizardStep = useAppStore((state) => state.wizardStep);
+  const setWizardStep = useAppStore((state) => state.setWizardStep);
+  const resumeText = useAppStore((state) => state.resumeText);
+  const jobDescription = useAppStore((state) => state.jobDescription);
+  const setAnalysisResult = useAppStore((state) => state.setAnalysisResult);
+  const isAnalyzing = useAppStore((state) => state.isAnalyzing);
+  const setIsAnalyzing = useAppStore((state) => state.setIsAnalyzing);
+
+  const canAnalyze = resumeText.length > 50 && jobDescription.length > 50;
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: JSON.stringify({ resumeText, jobDescription }),
+      });
+      const data = await res.json();
+      setAnalysisResult(data);
+      setWizardStep("analysis"); // Move to dashboard
+    } catch (error) {
+      console.error("Analysis failed", error);
+      alert("Analysis failed. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen p-8 max-w-5xl mx-auto space-y-8">
+      <header className="flex justify-between items-center pb-6 border-b border-border">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Resume Optimizer V2</h1>
+          <p className="text-muted-foreground">AI-Driven Resume Customization</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex gap-2">
+          {['upload', 'analysis', 'wizard', 'export'].map((step, idx) => (
+            <div key={step} className={cn(
+              "h-2 w-8 rounded-full transition-colors",
+              wizardStep === step || ['upload', 'analysis', 'wizard', 'export'].indexOf(wizardStep) > idx ? "bg-primary" : "bg-muted"
+            )} />
+          ))}
         </div>
-      </main>
-    </div>
+      </header>
+
+      <AnimatePresence mode="wait">
+        {wizardStep === "upload" && (
+          <motion.div
+            key="upload"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            <div className="grid md:grid-cols-2 gap-8">
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">1. Upload Resume</h2>
+                <FileUpload />
+              </section>
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">2. Job Description</h2>
+                <JobInput />
+              </section>
+            </div>
+
+            <div className="flex justify-center pt-8">
+              <Button
+                size="lg"
+                onClick={handleAnalyze}
+                disabled={!canAnalyze || isAnalyzing}
+                className="w-full md:w-auto min-w-[200px]"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Spinner className="mr-2 h-5 w-5" /> Analyzing...
+                  </>
+                ) : (
+                  "Analyze Gaps & Optimize"
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {wizardStep === "analysis" && (
+          <motion.div
+            key="analysis"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            <AnalysisDashboard />
+
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setWizardStep('upload')}>Back</Button>
+              <Button onClick={() => setWizardStep('wizard')}>Start Authenticity Check</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {wizardStep === "wizard" && (
+          <motion.div
+            key="wizard"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            <AuthenticityWizard />
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setWizardStep('analysis')}>Back</Button>
+              <Button onClick={() => setWizardStep('export')}>View Final Resume</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {wizardStep === "export" && (
+          <motion.div
+            key="export"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8 text-center"
+          >
+            <h2 className="text-2xl font-bold">Optimization Complete!</h2>
+            <p className="text-muted-foreground">Your resume has been updated with the verified keywords.</p>
+            <div className="p-12 border border-dashed rounded-lg bg-muted/10">
+              [Preview & Download Component Placeholder]
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => setWizardStep('wizard')}>Back</Button>
+              <Button>Download .DOCX</Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
   );
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { JSDOM } from 'jsdom'; // Note: I need to install jsdom or use a simpler regex approach if avoiding heavy deps.
+// import { JSDOM } from 'jsdom'; // Note: I need to install jsdom or use a simpler regex approach if avoiding heavy deps.
 // Implementation plan didn't specify jsdom. I'll use a simple fetch + text extraction or rely on 'cheerio' if I installed it.
 // I didn't install 'cheerio' or 'jsdom'. I'll try to use standard regex / string parsing for simplicity or just fetch text.
 // Actually, I can just fetch the HTML and try to strip tags. It's fragile but basic.

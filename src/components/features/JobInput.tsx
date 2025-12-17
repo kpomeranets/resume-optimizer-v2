@@ -34,8 +34,10 @@ export function JobInput() {
             }
 
             setJobDescription(data.text);
-        } catch (err: any) {
-            setError(err.message || "Error fetching job");
+        } catch (err: unknown) {
+            let msg = "Error fetching job";
+            if (err instanceof Error) msg = err.message;
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -63,15 +65,7 @@ export function JobInput() {
 
             <div className="space-y-2">
                 <label className="text-sm font-medium">Job Description Text</label>
-                <textarea
-                    className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Paste job description here..."
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    // Bind value to store content if we want fetch to populate it.
-                    // For simplicity, we just update store on change, but we should also display store value.
-                    // Let's grab value from store to control it.
-                    value={useAppStore.getState().jobDescription} // This is not reactive, use hook in real component
-                />
+
                 {/* Fix reactivity */}
                 <ReactiveTextArea />
             </div>

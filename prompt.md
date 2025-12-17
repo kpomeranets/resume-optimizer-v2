@@ -26,6 +26,7 @@
         *   **Behavior**: On drop, immediately show a "Parsing..." spinner. If parsing fails (e.g., encrypted PDF), automatically fallback to showing the "Paste Text" area with a toast message: "Could not read file. Please paste text."
     *   **Job URL Fetching**:
         *   **Behavior**: User pastes URL -> clicking "Fetch" triggers Server-Side Proxy.
+        *   **Constraint**: Use a SINGLE, reactive text area for both the fetched content and manual editing. Do not render duplicate inputs.
         *   **Edge Case**: If the endpoint returns 403/401 (blocked by scraping protection like Cloudflare), the UI must not crash. Instead, display a friendly "Access Denied" modal: "This site inhibits automated reading. Please copy-paste the Job Description manually."
     *   **Validation**: The "Next" button is disabled until both Resume ( > 50 words) and Job Description ( > 50 words) are detected.
 

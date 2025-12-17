@@ -1,10 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority" // Note: Need to install these or write plain string implementation if avoiding too many deps.
-// Wait, I didn't install class-variance-authority or radix-ui/react-slot.
-// I should keep it simple or install them. Implementation plan didn't specify them but they are standard.
-// I'll stick to simple props + cn for now to avoid installing more unless I just auto-install.
-// Actually, I can implement it without cva for now to be fast.
+// Simplified Button component
 
 import { cn } from "@/lib/utils"
 

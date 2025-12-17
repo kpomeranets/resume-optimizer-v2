@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 
 export function AnalysisDashboard() {
     const result = useAppStore((state) => state.analysisResult);

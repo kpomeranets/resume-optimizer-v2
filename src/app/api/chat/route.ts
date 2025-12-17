@@ -1,11 +1,10 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import OpenAI from 'openai';
+import { streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
 
-const openai = new OpenAI({
+const openai = createOpenAI({
     apiKey: process.env.OPENAI_API_KEY || 'mock-key',
 });
 
-// New AI SDK syntax might differ, sticking to compatible streaming response
 export async function POST(req: Request) {
     const { messages } = await req.json();
 
@@ -14,25 +13,17 @@ export async function POST(req: Request) {
     }
 
     try {
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are a helpful career coach assisting a user to rewrite their resume bullet points.
-          The user is answering clarifying questions about missing skills.
-          Your goal is to suggest a STAR-method bullet point based on their answer.
-          Keep it under 2 lines.
-          `
-                },
-                ...messages
-            ],
-            stream: true,
+        const result = await streamText({
+            model: openai('gpt-4'),
+            messages,
+            system: `You are a helpful career coach assisting a user to rewrite their resume bullet points.
+            The user is answering clarifying questions about missing skills.
+            Your goal is to suggest a STAR-method bullet point based on their answer.
+            Keep it under 2 lines.`,
         });
 
-        const stream = OpenAIStream(response);
-        return new StreamingTextResponse(stream);
-    } catch (error) {
+        return result.toTextStreamResponse();
+    } catch {
         return new Response('Error in Chat API', { status: 500 });
     }
 }

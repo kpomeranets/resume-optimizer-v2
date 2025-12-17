@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pdf from 'pdf-parse';
+// @ts-expect-error - pdf-parse missing default export type definition
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export async function POST(req: NextRequest) {

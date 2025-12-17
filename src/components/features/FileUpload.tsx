@@ -12,7 +12,7 @@ export function FileUpload() {
 
     const setResumeText = useAppStore((state) => state.setResumeText);
 
-    const handleFile = async (file: File) => {
+    const handleFile = useCallback(async (file: File) => {
         setIsUploading(true);
         setError(null);
 
@@ -37,7 +37,7 @@ export function FileUpload() {
         } finally {
             setIsUploading(false);
         }
-    };
+    }, [setResumeText]);
 
     const onDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -46,7 +46,7 @@ export function FileUpload() {
         if (e.dataTransfer.files?.[0]) {
             handleFile(e.dataTransfer.files[0]);
         }
-    }, []);
+    }, [handleFile]);
 
     return (
         <div className="w-full space-y-4">

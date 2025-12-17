@@ -1,11 +1,3 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { Configuration, OpenAIApi } from 'openai-edge';
-// Note: vercel ai sdk recent versions use different imports.
-// I installed 'ai' and 'openai'.
-// The 'ai' package has 'streamText' now. And 'openai' package is the official one.
-// Let's use the new 'ai' SDK generic interface or standard OpenAI if configured.
-// Assuming 'openai' package.
-
 import OpenAI from 'openai';
 
 const openai = new OpenAI({

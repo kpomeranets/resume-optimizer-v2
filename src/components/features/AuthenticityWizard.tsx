@@ -14,6 +14,9 @@ export function AuthenticityWizard() {
 
     const { messages, input, handleInputChange, handleSubmit, append, isLoading, error } = chatResponse;
 
+    // Fallback if input is undefined
+    const inputValue = input ?? '';
+
     // Initial prompt
     useEffect(() => {
         if (result && messages.length === 0 && append) {
@@ -79,12 +82,12 @@ export function AuthenticityWizard() {
             <div className="p-4 border-t bg-background">
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <Input
-                        value={input}
+                        value={inputValue}
                         onChange={handleInputChange}
                         placeholder="Type your answer..."
                         disabled={isLoading}
                     />
-                    <Button type="submit" disabled={isLoading || !input.trim()}>Send</Button>
+                    <Button type="submit" disabled={isLoading || !inputValue.trim()}>Send</Button>
                 </form>
             </div>
         </div>

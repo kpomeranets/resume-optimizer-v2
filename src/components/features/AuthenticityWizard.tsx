@@ -8,19 +8,20 @@ import { useEffect } from 'react';
 
 export function AuthenticityWizard() {
     const result = useAppStore((state) => state.analysisResult);
-    const { messages, input, handleInputChange, handleSubmit, append } = useChat({
+    const chatResponse = useChat({
         api: '/api/chat',
-    } as any);
+    });
+
+    const { messages, input, handleInputChange, handleSubmit, append } = chatResponse;
 
     // Initial prompt
     useEffect(() => {
-        if (result && messages.length === 0) {
+        if (result && messages.length === 0 && append) {
             const missing = result.criticalMissing.join(', ');
-            // Identify next keyword to focus on
-            // For simplicity, just send a system-like message trigger
+            // Send initial message to start the conversation
             append({
-                role: 'system',
-                content: `The user is missing these critical keywords: ${missing}. Pick the most important one and ask a clarifying question about it.`
+                role: 'user',
+                content: `I need help identifying if I have experience with these missing keywords from the job description: ${missing}. Please ask me about the most important one.`
             });
         }
     }, [result, append, messages.length]);

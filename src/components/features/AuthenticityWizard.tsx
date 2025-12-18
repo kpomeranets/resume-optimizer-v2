@@ -4,35 +4,24 @@ import { useChat } from '@ai-sdk/react';
 import { useAppStore } from "@/store/useAppStore";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useEffect } from 'react';
 
 export function AuthenticityWizard() {
     const result = useAppStore((state) => state.analysisResult);
     const chatResponse = useChat({
         api: '/api/chat',
+        initialMessages: result ? [{
+            id: 'initial',
+            role: 'user',
+            content: `I need help identifying if I have experience with these missing keywords from the job description: ${result.criticalMissing.join(', ')}. Please ask me about the most important one.`
+        }] : []
     });
 
-    const { messages, input, handleInputChange, handleSubmit, append, isLoading, error } = chatResponse;
+    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = chatResponse;
 
     // Fallback if input is undefined
     const inputValue = input ?? '';
 
-    // Initial prompt
-    useEffect(() => {
-        if (result && messages.length === 0 && append) {
-            const missing = result.criticalMissing.join(', ');
-            console.log('Sending initial message with missing keywords:', missing);
-            // Send initial message to start the conversation
-            append({
-                role: 'user',
-                content: `I need help identifying if I have experience with these missing keywords from the job description: ${missing}. Please ask me about the most important one.`
-            }).catch((err) => {
-                console.error('Error appending message:', err);
-            });
-        }
-    }, [result, append, messages.length]);
-
-    console.log('Chat state:', { messagesCount: messages.length, isLoading, error, hasAppend: !!append });
+    console.log('Chat state:', { messagesCount: messages.length, isLoading, error });
 
     return (
         <div className="flex flex-col h-[500px] border rounded-lg bg-background/50 backdrop-blur-sm">

@@ -14,12 +14,18 @@ export async function POST(req: Request) {
 
     try {
         const result = await streamText({
-            model: anthropic('claude-3-5-sonnet-20241022'),
+            model: anthropic('claude-sonnet-4-20250514'),
             messages,
-            system: `You are a helpful career coach assisting a user to rewrite their resume bullet points.
-            The user is answering clarifying questions about missing skills.
-            Your goal is to suggest a STAR-method bullet point based on their answer.
-            Keep it under 2 lines.`,
+            system: `You are a career coach helping verify a candidate's experience with missing resume keywords.
+
+Your role:
+1. Ask up to 3 targeted, contextual questions about missing keywords from the job description
+2. Ask intelligent questions that connect to their existing experience (e.g., "I see you have Docker experience. Have you used Kubernetes with it?")
+3. Focus on the most important/frequent keywords first
+4. Keep questions conversational and specific to their background
+5. After getting answers, acknowledge their responses and ask the next question
+
+Keep responses brief and focused on verification, not bullet point generation (that comes later).`,
         });
 
         return result.toTextStreamResponse();

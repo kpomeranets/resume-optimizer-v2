@@ -58,8 +58,33 @@ ${jobDescription.substring(0, 3000)}`
             ]
         });
 
-        const result = message.content[0].type === 'text' ? message.content[0].text : '{}';
-        return new Response(result, {
+        const rawText = message.content[0].type === 'text' ? message.content[0].text : '{}';
+
+        // Extract JSON from potential markdown code blocks
+        let jsonText = rawText;
+        const jsonMatch = rawText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (jsonMatch) {
+            jsonText = jsonMatch[1];
+        } else {
+            // Try to find JSON object in the text
+            const objectMatch = rawText.match(/\{[\s\S]*\}/);
+            if (objectMatch) {
+                jsonText = objectMatch[0];
+            }
+        }
+
+        // Parse and validate the JSON
+        const parsedResult = JSON.parse(jsonText);
+
+        // Ensure all required fields exist with defaults
+        const result = {
+            criticalMissing: parsedResult.criticalMissing || [],
+            underweighted: parsedResult.underweighted || [],
+            optimized: parsedResult.optimized || [],
+            suggestions: parsedResult.suggestions || {}
+        };
+
+        return new Response(JSON.stringify(result), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });

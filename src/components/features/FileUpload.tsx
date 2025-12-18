@@ -55,7 +55,7 @@ export function FileUpload() {
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={onDrop}
                 className={cn(
-                    "border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer",
+                    "relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer",
                     isDragOver ? "border-primary bg-primary/10" : "border-muted-foreground/25 hover:border-primary/50",
                     "flex flex-col items-center justify-center gap-2"
                 )}

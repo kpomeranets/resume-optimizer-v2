@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     try {
         const result = await streamText({
-            model: anthropic('claude-3-5-sonnet-latest'),
+            model: anthropic('claude-sonnet-4-20250514'),
             messages,
             system: `You are a helpful career coach assisting a user to rewrite their resume bullet points.
             The user is answering clarifying questions about missing skills.

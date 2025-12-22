@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
+import pdfParse from 'pdf-parse';
 
 export async function POST(req: NextRequest) {
     try {
@@ -21,9 +22,7 @@ export async function POST(req: NextRequest) {
         if (file.type === 'application/pdf') {
             console.log('[PDF Parse] Attempting to parse PDF...');
             try {
-                console.log('[PDF Parse] Loading pdf-parse library...');
-                // Dynamic import for pdf-parse to work with Next.js 16 Turbopack
-                const pdfParse = (await import('pdf-parse')).default;
+                console.log('[PDF Parse] Parsing PDF with pdf-parse...');
                 const data = await pdfParse(buffer);
                 console.log('[PDF Parse] PDF parsed successfully, text length:', data.text.length);
                 text = data.text;

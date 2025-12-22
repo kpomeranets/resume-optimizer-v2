@@ -5,6 +5,8 @@ import { FileUpload } from "@/components/features/FileUpload";
 import { JobInput } from "@/components/features/JobInput";
 import { AnalysisDashboard } from "@/components/features/AnalysisDashboard";
 import { AuthenticityWizard } from "@/components/features/AuthenticityWizard";
+import { RecommendationEngine } from "@/components/features/RecommendationEngine";
+import { ExportPreview } from "@/components/features/ExportPreview";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils";
@@ -47,10 +49,10 @@ export default function Home() {
           <p className="text-muted-foreground">AI-Driven Resume Customization</p>
         </div>
         <div className="flex gap-2">
-          {['upload', 'analysis', 'wizard', 'export'].map((step, idx) => (
+          {['upload', 'analysis', 'wizard', 'recommendations', 'export'].map((step, idx) => (
             <div key={step} className={cn(
               "h-2 w-8 rounded-full transition-colors",
-              wizardStep === step || ['upload', 'analysis', 'wizard', 'export'].indexOf(wizardStep) > idx ? "bg-primary" : "bg-muted"
+              wizardStep === step || ['upload', 'analysis', 'wizard', 'recommendations', 'export'].indexOf(wizardStep) > idx ? "bg-primary" : "bg-muted"
             )} />
           ))}
         </div>
@@ -123,7 +125,22 @@ export default function Home() {
             <AuthenticityWizard />
             <div className="flex justify-end gap-4">
               <Button variant="outline" onClick={() => setWizardStep('analysis')}>Back</Button>
-              <Button onClick={() => setWizardStep('export')}>View Final Resume</Button>
+              <Button onClick={() => setWizardStep('recommendations')}>Continue to Recommendations</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {wizardStep === "recommendations" && (
+          <motion.div
+            key="recommendations"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            <RecommendationEngine />
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setWizardStep('wizard')}>Back</Button>
             </div>
           </motion.div>
         )}
@@ -134,17 +151,12 @@ export default function Home() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-8 text-center"
+            className="space-y-8"
           >
-            <h2 className="text-2xl font-bold">Optimization Complete!</h2>
-            <p className="text-muted-foreground">Your resume has been updated with the verified keywords.</p>
-            <div className="p-12 border border-dashed rounded-lg bg-muted/10">
-              [Preview & Download Component Placeholder]
-            </div>
+            <ExportPreview />
 
             <div className="flex justify-center gap-4">
-              <Button variant="outline" onClick={() => setWizardStep('wizard')}>Back</Button>
-              <Button>Download .DOCX</Button>
+              <Button variant="outline" onClick={() => setWizardStep('recommendations')}>Back to Recommendations</Button>
             </div>
           </motion.div>
         )}

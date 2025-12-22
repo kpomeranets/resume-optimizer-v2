@@ -25,15 +25,25 @@ export function FileUpload() {
                 body: formData,
             });
 
+            const data = await res.json();
+
             if (!res.ok) {
-                throw new Error("Failed to parse file");
+                // Show detailed error from the API
+                const errorMessage = data.details || data.error || "Failed to parse file";
+                const fullError = `${errorMessage}${data.errorType ? ` (${data.errorType})` : ''}`;
+                console.error('[FileUpload] Parse error:', { status: res.status, data });
+                throw new Error(fullError);
             }
 
-            const data = await res.json();
+            console.log('[FileUpload] File parsed successfully, text length:', data.text?.length);
             setResumeText(data.text);
-        } catch (err) {
-            console.error(err);
-            setError("Could not read file. Please paste text manually below.");
+        } catch (err: any) {
+            console.error('[FileUpload] Error details:', {
+                message: err?.message,
+                name: err?.name,
+                stack: err?.stack
+            });
+            setError(`Could not read file: ${err?.message || 'Unknown error'}. Please paste text manually below.`);
         } finally {
             setIsUploading(false);
         }

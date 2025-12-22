@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-expect-error - pdf-parse missing default export type definition
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export async function POST(req: NextRequest) {
@@ -25,7 +22,9 @@ export async function POST(req: NextRequest) {
             console.log('[PDF Parse] Attempting to parse PDF...');
             try {
                 console.log('[PDF Parse] Loading pdf-parse library...');
-                const data = await pdf(buffer);
+                // Dynamic import for pdf-parse to work with Next.js 16 Turbopack
+                const pdfParse = (await import('pdf-parse')).default;
+                const data = await pdfParse(buffer);
                 console.log('[PDF Parse] PDF parsed successfully, text length:', data.text.length);
                 text = data.text;
             } catch (pdfError: any) {

@@ -1,9 +1,14 @@
 import { create } from 'zustand';
 
+interface KeywordAnalysis {
+    keyword: string;
+    frequency: number;
+}
+
 interface AnalysisResult {
-    criticalMissing: string[];
-    underweighted: string[];
-    optimized: string[];
+    criticalMissing: KeywordAnalysis[];
+    underweighted: KeywordAnalysis[];
+    optimized: KeywordAnalysis[];
     suggestions: Record<string, string>; // keyword -> suggestion question
 }
 

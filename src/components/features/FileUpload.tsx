@@ -9,12 +9,14 @@ export function FileUpload() {
     const [isDragOver, setIsDragOver] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
 
     const setResumeText = useAppStore((state) => state.setResumeText);
 
     const handleFile = useCallback(async (file: File) => {
         setIsUploading(true);
         setError(null);
+        setSuccess(false);
 
         const formData = new FormData();
         formData.append("file", file);
@@ -37,6 +39,10 @@ export function FileUpload() {
 
             console.log('[FileUpload] File parsed successfully, text length:', data.text?.length);
             setResumeText(data.text);
+            setSuccess(true);
+
+            // Hide success message after 3 seconds
+            setTimeout(() => setSuccess(false), 3000);
         } catch (err: any) {
             console.error('[FileUpload] Error details:', {
                 message: err?.message,
@@ -97,6 +103,12 @@ export function FileUpload() {
             {error && (
                 <div className="p-3 text-sm text-red-500 bg-red-500/10 rounded-md border border-red-500/20">
                     {error}
+                </div>
+            )}
+
+            {success && (
+                <div className="p-3 text-sm text-green-600 bg-green-500/10 rounded-md border border-green-500/20">
+                    ✓ Resume uploaded successfully!
                 </div>
             )}
 

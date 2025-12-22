@@ -26,7 +26,7 @@ export function AuthenticityWizard() {
         if (!result || hasStarted) return;
 
         setHasStarted(true);
-        const missing = result.criticalMissing.map(k => k.keyword).join(', ');
+        const missing = result.criticalMissing.join(', ');
 
         // Set the input and submit
         if (setInput) {
@@ -59,7 +59,7 @@ export function AuthenticityWizard() {
                 {messages.length === 0 && !isLoading && !error && !hasStarted && result && (
                     <div className="flex flex-col items-center justify-center py-12 gap-4">
                         <p className="text-center text-muted-foreground text-sm">
-                            Missing keywords: <span className="text-primary font-medium">{result.criticalMissing.map(k => k.keyword).join(', ')}</span>
+                            Missing keywords: <span className="text-primary font-medium">{result.criticalMissing.join(', ')}</span>
                         </p>
                         <Button onClick={(e: any) => handleStart(e)}>
                             Start Verification Questions

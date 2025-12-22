@@ -1,3 +1,45 @@
+---
+# PROMPT.MD META-INSTRUCTIONS
+
+## Document Purpose and Rules
+
+**This file (prompt.md) is the SINGLE SOURCE OF TRUTH for the entire Resume Optimizer V2 application.**
+
+### Mandatory Rules:
+1. **Always Update**: prompt.md MUST be updated with every code change, new requirement, clarification, or decision
+2. **Sufficient Detail**: The level of detail must be sufficient to fully recreate the entire app using ONLY this file with no additional context
+3. **Living Document**: This is a living document that evolves with the project
+4. **Conflict Resolution**: Any contradiction between prompt.md and actual code must be:
+   - Called out explicitly
+   - Explained with clear reasoning
+   - Include pros, cons, and risks of the change
+   - Resolved by updating either code or prompt.md
+5. **Version Control**: All changes to prompt.md should be tracked with:
+   - Date of change
+   - What changed
+   - Why it changed
+6. **Implementation Fidelity**: Code must match prompt.md specifications exactly unless explicitly documented otherwise
+
+### When Editing Code:
+- Read prompt.md first
+- Make code changes
+- Update prompt.md to reflect changes
+- Document any deviations with rationale
+
+### Document Structure:
+- Technical Stack
+- Phase-by-phase functional requirements
+- API specifications
+- Component specifications
+- State management structure
+- Use cases and examples
+- Testing requirements
+- Deployment checklist
+
+**VERSION**: 2.1
+**LAST MAJOR UPDATE**: December 19, 2025
+---
+
 # System Prompt: Resume Optimizer App (V2 - Robust Architecture)
 
 **Context**: You are an expert Full Stack Engineer and Product Manager.

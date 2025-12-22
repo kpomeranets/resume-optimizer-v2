@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+// @ts-expect-error - pdf-parse missing default export type definition
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export async function POST(req: NextRequest) {
     try {
+        console.log('[PDF Parse] Starting file parse request');
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
@@ -10,58 +14,67 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
 
+        console.log('[PDF Parse] File received:', { name: file.name, type: file.type, size: file.size });
+
         const buffer = Buffer.from(await file.arrayBuffer());
+        console.log('[PDF Parse] Buffer created, size:', buffer.length);
+
         let text = '';
 
         if (file.type === 'application/pdf') {
-            // PDF files should be parsed in the browser
-            return NextResponse.json(
-                { error: 'PDF files are parsed in the browser. This should not reach the server.' },
-                { status: 400 }
-            );
+            console.log('[PDF Parse] Attempting to parse PDF...');
+            try {
+                console.log('[PDF Parse] Loading pdf-parse library...');
+                const data = await pdf(buffer);
+                console.log('[PDF Parse] PDF parsed successfully, text length:', data.text.length);
+                text = data.text;
+            } catch (pdfError: any) {
+                console.error('[PDF Parse] PDF Error Details:', {
+                    message: pdfError?.message,
+                    name: pdfError?.name,
+                    stack: pdfError?.stack,
+                    fullError: pdfError
+                });
+
+                // Return detailed error to the client
+                return NextResponse.json({
+                    error: 'PDF parsing failed',
+                    details: pdfError?.message || 'Unknown PDF error',
+                    errorType: pdfError?.name,
+                    suggestion: 'The file may be encrypted, image-based, or require additional dependencies. Please paste text manually.'
+                }, { status: 500 });
+            }
         } else if (
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ) {
-            try {
-                const result = await mammoth.extractRawText({ buffer });
-                text = result.value;
-            } catch (docxError) {
-                console.error('DOCX parsing error:', docxError);
-                return NextResponse.json(
-                    { error: 'Failed to parse DOCX file. The file may be corrupted or in an unsupported format.' },
-                    { status: 500 }
-                );
-            }
+            console.log('[PDF Parse] Attempting to parse DOCX...');
+            const result = await mammoth.extractRawText({ buffer });
+            console.log('[PDF Parse] DOCX parsed successfully, text length:', result.value.length);
+            text = result.value;
         } else if (file.type === 'text/plain') {
-            try {
-                text = buffer.toString('utf-8');
-            } catch (txtError) {
-                console.error('TXT parsing error:', txtError);
-                return NextResponse.json(
-                    { error: 'Failed to read text file. The file may use an unsupported encoding.' },
-                    { status: 500 }
-                );
-            }
+            console.log('[PDF Parse] Parsing plain text file...');
+            text = buffer.toString('utf-8');
+            console.log('[PDF Parse] Text file parsed, length:', text.length);
         } else {
-            return NextResponse.json(
-                { error: `Unsupported file type: ${file.type}. Please use PDF, DOCX, or TXT files.` },
-                { status: 400 }
-            );
+            console.log('[PDF Parse] Unsupported file type:', file.type);
+            return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
         }
 
-        // Validate text length
-        if (!text || text.length < 10) {
-            return NextResponse.json(
-                { error: 'Extracted text is too short. Please ensure the file contains readable text.' },
-                { status: 400 }
-            );
-        }
-
+        console.log('[PDF Parse] Parse complete, returning text');
         return NextResponse.json({ text });
-    } catch (error) {
-        console.error('Error parsing file:', error);
+    } catch (error: any) {
+        console.error('[PDF Parse] Top-level error:', {
+            message: error?.message,
+            name: error?.name,
+            stack: error?.stack,
+            fullError: error
+        });
         return NextResponse.json(
-            { error: 'Failed to parse file. Please try again or paste the text manually.' },
+            {
+                error: 'Failed to parse file',
+                details: error?.message || 'Unknown error',
+                errorType: error?.name
+            },
             { status: 500 }
         );
     }

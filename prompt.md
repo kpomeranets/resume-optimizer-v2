@@ -1,3 +1,45 @@
+---
+# PROMPT.MD META-INSTRUCTIONS
+
+## Document Purpose and Rules
+
+**This file (prompt.md) is the SINGLE SOURCE OF TRUTH for the entire Resume Optimizer V2 application.**
+
+### Mandatory Rules:
+1. **Always Update**: prompt.md MUST be updated with every code change, new requirement, clarification, or decision
+2. **Sufficient Detail**: The level of detail must be sufficient to fully recreate the entire app using ONLY this file with no additional context
+3. **Living Document**: This is a living document that evolves with the project
+4. **Conflict Resolution**: Any contradiction between prompt.md and actual code must be:
+   - Called out explicitly
+   - Explained with clear reasoning
+   - Include pros, cons, and risks of the change
+   - Resolved by updating either code or prompt.md
+5. **Version Control**: All changes to prompt.md should be tracked with:
+   - Date of change
+   - What changed
+   - Why it changed
+6. **Implementation Fidelity**: Code must match prompt.md specifications exactly unless explicitly documented otherwise
+
+### When Editing Code:
+- Read prompt.md first
+- Make code changes
+- Update prompt.md to reflect changes
+- Document any deviations with rationale
+
+### Document Structure:
+- Technical Stack
+- Phase-by-phase functional requirements
+- API specifications
+- Component specifications
+- State management structure
+- Use cases and examples
+- Testing requirements
+- Deployment checklist
+
+**VERSION**: 2.1
+**LAST MAJOR UPDATE**: December 19, 2025
+---
+
 # System Prompt: Resume Optimizer App (V2 - Robust Architecture)
 
 **Context**: You are an expert Full Stack Engineer and Product Manager.
@@ -11,8 +53,8 @@
 *   **Backend**: Next.js API Routes (Serverless Functions).
 *   **AI Integration**: Vercel AI SDK (streaming responses) with Anthropic Claude (Claude 3.5 Sonnet or Claude Opus 4).
 *   **File Handling**:
-    *   `pdfjs-dist` (Client-side PDF extraction for reliability - avoids native dependency issues).
-    *   `mammoth` (Server-side DOCX extraction).
+    *   `pdf-parse` (Server-side PDF extraction).
+    *   `mammoth` (Server-side Word extraction).
     *   `docx` (Library for generating downloadable .docx files).
 
 ## 2. Detailed Functional Requirements & Behavior
@@ -23,23 +65,7 @@
 *   **Multi-mode Input Behavior**:
     *   **File Upload**:
         *   Accepts `.pdf`, `.docx`, `.txt`.
-        *   **Technical Implementation**:
-            *   **PDF files**: Parsed client-side using `pdfjs-dist` to avoid native dependency issues with `pdf-parse`.
-                *   Dynamic import of pdfjs-dist to avoid SSR issues
-                *   Worker URL: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`
-                *   Iterates through all pages and extracts text using `getTextContent()`
-                *   Detailed error logging to console with `[PDF Parser]` prefix for debugging
-            *   **DOCX and TXT files**: Sent to server-side `/api/parse` route for processing
-            *   **Text validation**: All files must contain > 10 characters of text
-        *   **Behavior**:
-            *   On file selection, immediately show: "Parsing [filename]..." with spinner
-            *   If parsing fails (e.g., encrypted PDF, image-based PDF), show specific error: "Could not read PDF. The file may be encrypted, image-based, or corrupted. Please paste text manually below."
-            *   On success, display persistent success message with file type icon and filename:
-                *   Format: "✓ Successfully uploaded: [filename]"
-                *   File type icons: 📄 for PDF, 📝 for DOCX, 📃 for TXT
-                *   Success message in green, errors in red
-                *   Success message clears when new file upload starts
-        *   **Error Messages**: Specific to file type and failure reason (encrypted, corrupted, unsupported format, text too short)
+        *   **Behavior**: On drop, immediately show a "Parsing..." spinner. If parsing fails (e.g., encrypted PDF), automatically fallback to showing the "Paste Text" area with a toast message: "Could not read file. Please paste text."
     *   **Job URL Fetching**:
         *   **Behavior**: User pastes URL -> clicking "Fetch" triggers Server-Side Proxy.
         *   **Constraint**: Use a SINGLE, reactive text area for both the fetched content and manual editing. Do not render duplicate inputs.
@@ -57,56 +83,20 @@
             *   **CRITICAL MISSING**: Keywords present >3 times in JD but 0 times in Resume.
             *   **UNDERWEIGHTED**: Present in JD >3 times, but only once in Resume (or only in "Skills" section, not in "Experience").
             *   **OPTIMIZED**: Good balance.
-    *   **Implementation Note**: 
-        *   The AI prompt must explicitly instruct Claude to **pay attention to keyword frequency** in the Job Description.
-        *   Claude should add weight and priority to keywords based on their occurrence count in the JD.
-        *   Claude determines the optimal weighting strategy (raw counts, categories, or sorted lists).
 *   **Authenticity Check**:
     *   The AI must NOT blindly add keywords. It must check the context.
     *   **Bad**: Adding "Python" to a "Customer Service" role.
     *   **Good**: Suggesting "Did you use *Python* for this data entry automation?" via the Q&A interface.
 
 ### Phase 3: The "Authenticity Wizard" (Clarification Loop)
-**Goal**: Ensure the generated bullets are true to the user's actual experience.
+**Goal**: Ensure the generated bullets are true to the user's actual diverse experience.
 
-*   **STEP 1: Keyword Selection Interface**:
-    *   **Trigger**: After AI analysis, present all CRITICAL MISSING and UNDERWEIGHTED keywords to the user.
-    *   **UI**: Checkbox interface where user selects keywords they believe they have experience with.
-    *   **Behavior**: User can select all, some, or none of the keywords before proceeding.
-
-*   **STEP 2: Clarifying Questions Agent** (for selected keywords):
-    *   **Trigger**: For each keyword the user selected, AI asks clarifying questions.
+*   **Clarifying Questions Agent**:
+    *   **Trigger**: Before generating new bullets, the AI analyzes the "Critical Missing" keywords.
     *   **Behavior**:
-        *   AI asks questions to gather sufficient context about the user's experience with the keyword.
-        *   AI determines when it has "enough" information and automatically moves to the next keyword.
-        *   Maximum 10 questions per keyword, but AI should aim for quality over quantity (may only need 2-3 questions).
-    *   **User Controls**:
-        *   **"Skip Question" button**: User can skip any individual question if not relevant.
-        *   **"Skip to Next Keyword" button**: User can manually advance to the next keyword at any time.
-    *   **UI**: Chat-like interface with system messages for transitions.
-    *   **Handling Insufficient Experience**:
-        *   IF user clicks "Skip to Next Keyword" without providing any substantive answers OR explicitly states they don't have experience:
-            *   Display message in chat: "Noted. [Keyword] will not be included in the recommendations."
-            *   System marks keyword as "excluded" for recommendation generation.
-            *   Move to next selected keyword or proceed to STEP 3.
-
-*   **STEP 3: Secondary Keyword Suggestion**:
-    *   **Trigger**: After completing Q&A for all user-selected keywords.
-    *   **Behavior**:
-        *   AI analyzes the user's answers to selected keywords AND the original resume text.
-        *   AI identifies unselected keywords that the user might actually have experience with based on context clues.
-        *   AI presents these overlooked keywords to the user with rationale.
-    *   **UI**: 
-        *   Display each suggested keyword with 2-3 sentences explaining why it might be relevant.
-        *   Example: "**Docker**: Based on your answers about Kubernetes and your mention of containerization in your resume, you may have Docker experience. Would you like to discuss this keyword?"
-    *   **User Actions**:
-        *   User can accept or reject each suggested keyword.
-        *   IF user accepts any suggested keywords: Return to STEP 2 (Q&A loop) for those keywords only.
-        *   IF user rejects all or none suggested: Proceed to STEP 4.
-
-*   **STEP 4: Generate Recommendations**:
-    *   **Trigger**: User clicks "Generate Recommendations" button (appears after completing all keyword Q&A).
-    *   **Behavior**: System compiles all keyword experiences and generates optimized resume recommendations.
+        *   If "Kubernetes" is missing but "Docker" is present, allow the AI to ask: *"The job requires Kubernetes. Did you use K8s in your Docker projects at [Company]?"*
+        *   Limit to 3 high-impact questions to avoid user fatigue.
+    *   **UI**: A chat-like or form-like interface where the user answers "Yes (details...)", "No", or "Skip".
 
 ### Phase 4: Recommendation Engine (The Core Value)
 **Goal**: Present changes clearly and educate the user.
@@ -115,60 +105,22 @@
     *   **Input**: Old Bullet + Context + User Answers + Target Keywords.
     *   **Output**: New Bullet (STAR Method: Situation, Task, Action, Result).
     *   **Constraint**: Max 2 lines per bullet (standard resume format).
-    *   **Scope**: Generate recommendations for ALL included keywords based on user's Q&A responses.
-
-*   **Recommendations Display Interface**:
-    *   **Structure**:
-        *   Separate read-only text box for each resume section:
-            *   Summary (optional)
-            *   Experience (with sub-sections for each job in work history)
-            *   Skills
-            *   Education
-        *   Each job in the Experience section should be displayed in its own sub-section.
-    *   **Visuals**: 
-        *   Text boxes are read-only for initial review.
-        *   Clean, organized layout showing optimized content with keywords integrated.
-    *   **User Actions**:
-        *   **"Accept All Changes" button**: Applies all recommendations and proceeds to export.
-        *   **Individual Edit capability**: User can request modifications to specific sections (separate edit functionality to be designed).
-        *   **Export to DOCX button**: Available after accepting changes (implementation in Phase 5).
-
-*   **Diff Viewer UI** (Phase 5 Feature):
+*   **Diff Viewer UI**:
     *   **Visuals**: Use green highlights for added text, red strikethrough for deleted text.
     *   **Interactive Tooltips**: Hovering over a bolded keyword shows: "Added because 'Cloud Governance' appears 5x in Job Description."
-    *   **Note**: Diff viewer is marked as Phase 5 due to complexity.
+*   **Approval Workflow**:
+    *   "Approve All" button for confident users.
+    *   "Edit" button for each suggestion allow the user to tweak the phrasing before accepting.
 
-### Phase 5: Export & Delivery (Future Implementation)
-**Goal**: Provide ATS-compatible resume output and persistent keyword storage.
-
-*   **Export Format Specs**:
+### Phase 5: Export & Delivery
+*   **Format Specs**:
     *   **ATS Compatibility**: Use standard Arial/Calibri fonts. Avoid tables, columns, or graphics.
     *   **Structure**:
         1.  **Header**: Name, Contact (preserved from original).
         2.  **Summary**: (Optional AI rewrite).
-        3.  **Experience**: The optimized content with keyword integration.
+        3.  **Experience**: The optimized content.
         4.  **Skills**: Updated list including the new keywords.
-    *   **File naming**: `[Role]_[Company]_[Date].docx`
-
-*   **Keyword Answer Storage & Retrieval**:
-    *   **Storage Scope**: 
-        *   **Global across all sessions**: All keyword Q&A pairs stored together (e.g., all "Python" answers available regardless of specific resume/JD combination).
-        *   **User-configurable**: Users can choose to reuse previous answers or start fresh for each new optimization session.
-    *   **Data Persistence**: Stored indefinitely in browser localStorage until user clears browser data or manually deletes.
-    *   **Management Interface**:
-        *   Settings/History page where users can:
-            *   View all stored keyword answers
-            *   Edit existing answers
-            *   Delete individual keyword entries
-            *   **"Clear All Data" button**: Wipes all stored keyword answers
-    *   **Integration**: When user encounters a previously-answered keyword, system can auto-populate or suggest using stored answers.
-
-*   **Advanced State Management** (Phase 5):
-    *   Upgrade Zustand store to track:
-        *   Current keyword being discussed
-        *   Keywords marked as "skip" vs "include"
-        *   User answers per keyword with timestamps
-        *   Session history and restoration capability
+*   **File naming**: `[Role]_[Company]_[Date].docx`
 
 ## 3. Use Cases
 
@@ -176,12 +128,10 @@
 *   **User**: A Java Developer applying for a Python role.
 *   **Scenario**: Resume is full of Java keywords. JD wants Python.
 *   **App Behavior**:
-    1.  Analysis identifies "Python" as **Critical Missing**.
-    2.  User selects "Python" checkbox in keyword selection interface.
-    3.  AI asks: "Have you used Python in any side projects or scripting at [Current Job]?"
-    4.  User: "Yes, wrote scripts for CI/CD."
-    5.  AI asks 1-2 follow-up questions for details.
-    6.  **Result**: System generates recommendation rewriting a "CI/CD" bullet to: *"Automated CI/CD pipelines using **Python** scripts, reducing deployment time by 40%."*
+    1.  Identifies "Python" as **Critical Missing**.
+    2.  Asks: "Have you used Python in any side projects or scripting at [Current Job]?"
+    3.  User: "Yes, wrote scripts for CI/CD."
+    4.  **Result**: Rewrites a "CI/CD" bullet to: *"Automated CI/CD pipelines using **Python** scripts, reducing deployment time by 40%."*
 
 ### Use Case B: The "Blocked URL"
 *   **User**: Pastes a LinkedIn Job URL.
@@ -192,68 +142,62 @@
     3.  User pastes text.
     4.  App proceeds normally (graceful recovery).
 
-### Use Case C: The "Overlooked Skill"
-*   **User**: Applying for DevOps role, selects "Kubernetes" and "CI/CD" but misses "Docker".
-*   **Scenario**: User answered Kubernetes questions mentioning container orchestration.
-*   **App Behavior**:
-    1.  After completing Kubernetes Q&A, system analyzes context.
-    2.  Secondary suggestion appears: "**Docker**: You mentioned containerization in your Kubernetes answers. Docker is listed 4 times in the job description. Would you like to discuss your Docker experience?"
-    3.  User accepts.
-    4.  System proceeds with Docker Q&A before generating final recommendations.
-
-## 4. UI/UX Design System "North Star" (Phase 5 Refinement)
+## 4. UI/UX Design System "North Star"
 *   **Aesthetic**: "Cyber-Professional". Dark mode default.
-    *   **Palette**: Tailwind CSS theme system with customizable colors (specific palette refinement in Phase 5).
-    *   **Core Colors Reference**: Deep Navy (`#0F172A`) background. Electric Blue (`#38BDF8`) for primary actions. Muted Slate (`#94A3B8`) for secondary text.
+    *   **Palette**: Deep Navy (`#0F172A`) background. Electric Blue (`#38BDF8`) for primary actions. Muted Slate (`#94A3B8`) for secondary text.
 *   **Motion**:
     *   **Page Transitions**: Framer Motion `AnimatePresence` for smooth wizard step changes.
-    *   **Success State**: Confetti or specific "Checkmark" animation when "Approve All" is clicked (Phase 5 feature).
+    *   **Success State**: Confetti or specific "Checkmark" animation when "Approve All" is clicked.
 
 ## 5. Security & Privacy
-*   **Data Retention**: 
-    *   Resume data stored in browser `localStorage` for session persistence and recovery.
-    *   Keyword Q&A data stored in `localStorage` for cross-session reuse (see Phase 5 for detailed implementation).
-*   **No Database**: V2 does NOT require a database. All storage is client-side via localStorage.
-*   **Data Management**: 
-    *   Users have full control over their data via Settings/History interface.
-    *   "Clear All Data" button available for complete data wipe.
-    *   No server-side data persistence beyond temporary session handling.
+*   **Data Retention**: Resume data should be stored in `localStorage` (Client) or ephemeral session storage (Server).
+*   **No Database**: V2 should NOT require a database unless user accounts are explicitly added. Optimize for "Session-based" usage.
 
-## 6. Implementation Priority Order
+## 6. PDF Parsing Debugging & Troubleshooting
 
-**Priority 1**: Conflict 1 Resolution
-*   Update AI analysis prompt to instruct Claude to pay attention to keyword frequency
-*   Modify `/api/analyze` route to include frequency weighting instructions
+### Common PDF Parsing Issues
 
-**Priority 2**: Conflict 2 Resolution  
-*   Implement keyword selection checkbox interface
-*   Build multi-question Q&A flow with skip controls
-*   Create secondary keyword suggestion logic
-*   Add "Generate Recommendations" trigger
+**Issue: DOMMatrix/Canvas Errors**
+- **Error**: `ReferenceError: DOMMatrix is not defined`
+- **Cause**: `pdf-parse` requires canvas dependencies (DOMMatrix, ImageData, Path2D)
+- **Solution**: Install `canvas` package: `npm install canvas`
+- **Alternative**: Use text-only PDFs or implement client-side parsing
 
-**Priority 3**: Conflict 3 Resolution
-*   Build Recommendation Engine API route using Claude
-*   Create recommendations display interface with sectioned text boxes
-*   Implement "Accept All Changes" workflow
-*   Stub out DOCX export (full implementation in Phase 5)
+**Issue: Encrypted PDFs**
+- **Error**: PDF parsing fails silently or returns empty text
+- **Cause**: Password-protected or DRM-protected PDFs cannot be parsed
+- **Solution**: User must unlock PDF or paste text manually
 
-**Priority 4**: Conflict 6 Resolution
-*   Implement localStorage persistence for keyword Q&A data
-*   Create Settings/History management interface
-*   Add "Clear All Data" functionality
-*   Build keyword answer retrieval and reuse logic
+**Issue: Image-based PDFs**
+- **Error**: Parsing succeeds but returns no text
+- **Cause**: PDF contains scanned images without OCR text layer
+- **Solution**: Requires OCR processing (not implemented) - user must paste text manually
 
-**Phase 5 (Future Work)**:
-*   DOCX export with ATS-compliant formatting
-*   Diff viewer with green/red highlights and interactive tooltips
-*   Success animations (confetti)
-*   UI/UX refinement to match cyber-professional aesthetic
-*   Advanced state management upgrades
+### Debugging Approach
 
-## 7. Development Notes
+1. **Check Server Logs**: Look for `[PDF Parse]` prefixed console messages showing:
+   - File details (name, type, size)
+   - Buffer creation status
+   - Specific error messages with type and stack trace
 
-*   **File Structure**: Maintain clean separation of concerns with components in `/components/features/` and API routes in `/app/api/`.
-*   **Error Handling**: All API routes must handle errors gracefully with user-friendly messages.
-*   **Testing Strategy**: Manual testing with real resumes and job descriptions to validate AI responses.
-*   **Performance**: Minimize unnecessary re-renders with proper React memoization and Zustand selectors.
-*   **Accessibility**: Ensure all interactive elements have proper ARIA labels and keyboard navigation support.
+2. **Check Client Logs**: Look for `[FileUpload]` prefixed messages showing:
+   - API response status and data
+   - Detailed error information
+
+3. **Error Message Format**: API returns structured errors:
+   ```json
+   {
+     "error": "PDF parsing failed",
+     "details": "Actual error message",
+     "errorType": "ReferenceError",
+     "suggestion": "User-friendly suggestion"
+   }
+   ```
+
+4. **Fallback Behavior**: UI automatically shows paste text area with detailed error message
+
+### Recommended Fixes
+
+- **For Development**: Install all dependencies including `canvas`
+- **For Production**: Consider client-side PDF parsing or server with proper canvas support
+- **User Experience**: Always provide manual text paste fallback

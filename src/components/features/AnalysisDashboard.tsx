@@ -21,8 +21,8 @@ export function AnalysisDashboard() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {result.criticalMissing.map((kw) => (
-                            <span key={kw} className="px-2 py-1 text-xs rounded-full bg-red-500/10 text-red-200 border border-red-500/20">
-                                {kw}
+                            <span key={kw.keyword} className="px-2 py-1 text-xs rounded-full bg-red-500/10 text-red-200 border border-red-500/20">
+                                {kw.keyword} (mentioned {kw.frequency}x)
                             </span>
                         ))}
                         {result.criticalMissing.length === 0 && <span className="text-sm text-muted-foreground">None found!</span>}
@@ -37,8 +37,8 @@ export function AnalysisDashboard() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {result.underweighted.map((kw) => (
-                            <span key={kw} className="px-2 py-1 text-xs rounded-full bg-yellow-500/10 text-yellow-200 border border-yellow-500/20">
-                                {kw}
+                            <span key={kw.keyword} className="px-2 py-1 text-xs rounded-full bg-yellow-500/10 text-yellow-200 border border-yellow-500/20">
+                                {kw.keyword} (mentioned {kw.frequency}x)
                             </span>
                         ))}
                         {result.underweighted.length === 0 && <span className="text-sm text-muted-foreground">None found!</span>}
@@ -53,8 +53,8 @@ export function AnalysisDashboard() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {result.optimized.map((kw) => (
-                            <span key={kw} className="px-2 py-1 text-xs rounded-full bg-green-500/10 text-green-200 border border-green-500/20">
-                                {kw}
+                            <span key={kw.keyword} className="px-2 py-1 text-xs rounded-full bg-green-500/10 text-green-200 border border-green-500/20">
+                                {kw.keyword} (mentioned {kw.frequency}x)
                             </span>
                         ))}
                         {result.optimized.length === 0 && <span className="text-sm text-muted-foreground">No matches yet.</span>}

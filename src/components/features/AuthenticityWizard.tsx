@@ -11,9 +11,11 @@ export function AuthenticityWizard() {
     const [hasStarted, setHasStarted] = useState(false);
 
     const chatResponse = useChat({
+        // @ts-ignore - AI SDK v5 type definitions don't include 'api' parameter, but it works at runtime
         api: '/api/chat',
     });
 
+    // @ts-ignore - AI SDK v5 type definitions differ from runtime API
     const { messages, input, handleInputChange, handleSubmit, isLoading, error, setInput } = chatResponse;
 
     // Fallback if input is undefined
@@ -24,7 +26,7 @@ export function AuthenticityWizard() {
         if (!result || hasStarted) return;
 
         setHasStarted(true);
-        const missing = result.criticalMissing.join(', ');
+        const missing = result.criticalMissing.map(k => k.keyword).join(', ');
 
         // Set the input and submit
         if (setInput) {
@@ -57,7 +59,7 @@ export function AuthenticityWizard() {
                 {messages.length === 0 && !isLoading && !error && !hasStarted && result && (
                     <div className="flex flex-col items-center justify-center py-12 gap-4">
                         <p className="text-center text-muted-foreground text-sm">
-                            Missing keywords: <span className="text-primary font-medium">{result.criticalMissing.join(', ')}</span>
+                            Missing keywords: <span className="text-primary font-medium">{result.criticalMissing.map(k => k.keyword).join(', ')}</span>
                         </p>
                         <Button onClick={(e: any) => handleStart(e)}>
                             Start Verification Questions

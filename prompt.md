@@ -11,8 +11,8 @@
 *   **Backend**: Next.js API Routes (Serverless Functions).
 *   **AI Integration**: Vercel AI SDK (streaming responses) with Anthropic Claude (Claude 3.5 Sonnet or Claude Opus 4).
 *   **File Handling**:
-    *   `pdf-parse` (Server-side PDF extraction).
-    *   `mammoth` (Server-side Word extraction).
+    *   `pdfjs-dist` (Client-side PDF extraction for reliability - avoids native dependency issues).
+    *   `mammoth` (Server-side DOCX extraction).
     *   `docx` (Library for generating downloadable .docx files).
 
 ## 2. Detailed Functional Requirements & Behavior
@@ -23,7 +23,23 @@
 *   **Multi-mode Input Behavior**:
     *   **File Upload**:
         *   Accepts `.pdf`, `.docx`, `.txt`.
-        *   **Behavior**: On drop, immediately show a "Parsing..." spinner. If parsing fails (e.g., encrypted PDF), automatically fallback to showing the "Paste Text" area with a toast message: "Could not read file. Please paste text."
+        *   **Technical Implementation**:
+            *   **PDF files**: Parsed client-side using `pdfjs-dist` to avoid native dependency issues with `pdf-parse`.
+                *   Dynamic import of pdfjs-dist to avoid SSR issues
+                *   Worker URL: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`
+                *   Iterates through all pages and extracts text using `getTextContent()`
+                *   Detailed error logging to console with `[PDF Parser]` prefix for debugging
+            *   **DOCX and TXT files**: Sent to server-side `/api/parse` route for processing
+            *   **Text validation**: All files must contain > 10 characters of text
+        *   **Behavior**:
+            *   On file selection, immediately show: "Parsing [filename]..." with spinner
+            *   If parsing fails (e.g., encrypted PDF, image-based PDF), show specific error: "Could not read PDF. The file may be encrypted, image-based, or corrupted. Please paste text manually below."
+            *   On success, display persistent success message with file type icon and filename:
+                *   Format: "✓ Successfully uploaded: [filename]"
+                *   File type icons: 📄 for PDF, 📝 for DOCX, 📃 for TXT
+                *   Success message in green, errors in red
+                *   Success message clears when new file upload starts
+        *   **Error Messages**: Specific to file type and failure reason (encrypted, corrupted, unsupported format, text too short)
     *   **Job URL Fetching**:
         *   **Behavior**: User pastes URL -> clicking "Fetch" triggers Server-Side Proxy.
         *   **Constraint**: Use a SINGLE, reactive text area for both the fetched content and manual editing. Do not render duplicate inputs.

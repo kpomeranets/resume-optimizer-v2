@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-expect-error - pdf-parse missing default export type definition
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export async function POST(req: NextRequest) {
@@ -17,24 +14,54 @@ export async function POST(req: NextRequest) {
         let text = '';
 
         if (file.type === 'application/pdf') {
-            const data = await pdf(buffer);
-            text = data.text;
+            // PDF files should be parsed in the browser
+            return NextResponse.json(
+                { error: 'PDF files are parsed in the browser. This should not reach the server.' },
+                { status: 400 }
+            );
         } else if (
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ) {
-            const result = await mammoth.extractRawText({ buffer });
-            text = result.value;
+            try {
+                const result = await mammoth.extractRawText({ buffer });
+                text = result.value;
+            } catch (docxError) {
+                console.error('DOCX parsing error:', docxError);
+                return NextResponse.json(
+                    { error: 'Failed to parse DOCX file. The file may be corrupted or in an unsupported format.' },
+                    { status: 500 }
+                );
+            }
         } else if (file.type === 'text/plain') {
-            text = buffer.toString('utf-8');
+            try {
+                text = buffer.toString('utf-8');
+            } catch (txtError) {
+                console.error('TXT parsing error:', txtError);
+                return NextResponse.json(
+                    { error: 'Failed to read text file. The file may use an unsupported encoding.' },
+                    { status: 500 }
+                );
+            }
         } else {
-            return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+            return NextResponse.json(
+                { error: `Unsupported file type: ${file.type}. Please use PDF, DOCX, or TXT files.` },
+                { status: 400 }
+            );
+        }
+
+        // Validate text length
+        if (!text || text.length < 10) {
+            return NextResponse.json(
+                { error: 'Extracted text is too short. Please ensure the file contains readable text.' },
+                { status: 400 }
+            );
         }
 
         return NextResponse.json({ text });
     } catch (error) {
         console.error('Error parsing file:', error);
         return NextResponse.json(
-            { error: 'Failed to parse file' },
+            { error: 'Failed to parse file. Please try again or paste the text manually.' },
             { status: 500 }
         );
     }

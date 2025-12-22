@@ -6,9 +6,18 @@ const anthropic = new Anthropic({
 
 // Mock response function for development without API key
 const mockAnalysis = {
-    criticalMissing: ['Python', 'Kubernetes'],
-    underweighted: ['Agile', 'Leadership'],
-    optimized: ['JavaScript', 'React'],
+    criticalMissing: [
+        { keyword: 'Python', frequency: 5 },
+        { keyword: 'Kubernetes', frequency: 4 }
+    ],
+    underweighted: [
+        { keyword: 'Agile', frequency: 3 },
+        { keyword: 'Leadership', frequency: 4 }
+    ],
+    optimized: [
+        { keyword: 'JavaScript', frequency: 6 },
+        { keyword: 'React', frequency: 5 }
+    ],
     suggestions: {
         Python: 'Did you use Python for scripting or automation in your previous role?',
         Kubernetes: 'Have you deployed containerized applications using K8s?',
@@ -36,18 +45,21 @@ export async function POST(req: Request) {
                     content: `You are an expert ATS resume analyzer. Analyze the gap between the RESUME and JOB DESCRIPTION.
 Output JSON format ONLY (no other text):
 {
-  "criticalMissing": ["keyword1", "keyword2"],
-  "underweighted": ["keyword3"],
-  "optimized": ["keyword4"],
+  "criticalMissing": [{"keyword": "keyword1", "frequency": 5}, {"keyword": "keyword2", "frequency": 4}],
+  "underweighted": [{"keyword": "keyword3", "frequency": 3}],
+  "optimized": [{"keyword": "keyword4", "frequency": 6}],
   "suggestions": {
      "keyword1": "Clarifying question?",
      "keyword2": "Clarifying question?"
   }
 }
-- "criticalMissing": Keywords in JD >3 times, 0 in Resume.
-- "underweighted": Keywords in JD >3 times, only 1 in Resume.
-- "optimized": Good balance.
+- "criticalMissing": Keywords in JD >3 times, 0 in Resume. Include frequency count from JD.
+- "underweighted": Keywords in JD >3 times, only 1 in Resume. Include frequency count from JD.
+- "optimized": Good balance. Include frequency count from JD.
+- "frequency": Count how many times the keyword appears in the JOB DESCRIPTION.
 - "suggestions": For critical missing, ask a question to check if user actually has the skill.
+
+IMPORTANT: Focus on keyword frequency analysis. Count exact mentions in the job description.
 
 RESUME:
 ${resumeText.substring(0, 3000)}

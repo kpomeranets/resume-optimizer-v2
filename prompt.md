@@ -110,3 +110,52 @@
 ## 5. Security & Privacy
 *   **Data Retention**: Resume data should be stored in `localStorage` (Client) or ephemeral session storage (Server).
 *   **No Database**: V2 should NOT require a database unless user accounts are explicitly added. Optimize for "Session-based" usage.
+
+## 6. PDF Parsing Debugging & Troubleshooting
+
+### Common PDF Parsing Issues
+
+**Issue: DOMMatrix/Canvas Errors**
+- **Error**: `ReferenceError: DOMMatrix is not defined`
+- **Cause**: `pdf-parse` requires canvas dependencies (DOMMatrix, ImageData, Path2D)
+- **Solution**: Install `canvas` package: `npm install canvas`
+- **Alternative**: Use text-only PDFs or implement client-side parsing
+
+**Issue: Encrypted PDFs**
+- **Error**: PDF parsing fails silently or returns empty text
+- **Cause**: Password-protected or DRM-protected PDFs cannot be parsed
+- **Solution**: User must unlock PDF or paste text manually
+
+**Issue: Image-based PDFs**
+- **Error**: Parsing succeeds but returns no text
+- **Cause**: PDF contains scanned images without OCR text layer
+- **Solution**: Requires OCR processing (not implemented) - user must paste text manually
+
+### Debugging Approach
+
+1. **Check Server Logs**: Look for `[PDF Parse]` prefixed console messages showing:
+   - File details (name, type, size)
+   - Buffer creation status
+   - Specific error messages with type and stack trace
+
+2. **Check Client Logs**: Look for `[FileUpload]` prefixed messages showing:
+   - API response status and data
+   - Detailed error information
+
+3. **Error Message Format**: API returns structured errors:
+   ```json
+   {
+     "error": "PDF parsing failed",
+     "details": "Actual error message",
+     "errorType": "ReferenceError",
+     "suggestion": "User-friendly suggestion"
+   }
+   ```
+
+4. **Fallback Behavior**: UI automatically shows paste text area with detailed error message
+
+### Recommended Fixes
+
+- **For Development**: Install all dependencies including `canvas`
+- **For Production**: Consider client-side PDF parsing or server with proper canvas support
+- **User Experience**: Always provide manual text paste fallback

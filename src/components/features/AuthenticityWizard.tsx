@@ -21,23 +21,29 @@ export function AuthenticityWizard() {
     // Fallback if input is undefined
     const inputValue = input ?? '';
 
-    const handleStart = async (e: React.FormEvent) => {
+    const handleStart = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (!result || hasStarted) return;
 
+        console.log('[AuthenticityWizard] Starting conversation...');
         setHasStarted(true);
         const missing = result.criticalMissing.map(k => k.keyword).join(', ');
 
-        // Set the input and submit
+        console.log('[AuthenticityWizard] Missing keywords:', missing);
+
+        // Set the input
         if (setInput) {
             setInput(`I need help identifying if I have experience with these missing keywords from the job description: ${missing}. Please ask me about the most important one.`);
         }
 
-        // Create a synthetic form event to submit
-        const form = e.target as HTMLFormElement;
+        // Submit after a short delay to ensure input is set
         setTimeout(() => {
-            form.requestSubmit();
-        }, 100);
+            console.log('[AuthenticityWizard] Submitting form...');
+            if (handleSubmit) {
+                const syntheticEvent = new Event('submit', { bubbles: true, cancelable: true }) as any;
+                handleSubmit(syntheticEvent);
+            }
+        }, 200);
     };
 
     console.log('Chat state:', { messagesCount: messages.length, isLoading, error, hasStarted });
